@@ -1855,17 +1855,17 @@ func TestMetaBackend_configToExtra(t *testing.T) {
 
 // no config; return inmem backend stored in state
 func TestBackendFromState(t *testing.T) {
-	td := tempDir(t)
-	testCopyDir(t, testFixturePath("backend-from-state"), td)
-	defer os.RemoveAll(td)
-	defer testChdir(t, td)()
+	wd, cleanup := tempWorkingDirFixture(t, "backend-from-state")
+	defer cleanup()
 
 	// Setup the meta
 	m := testMetaBackend(t, nil)
 	// terraform caches a small "state" file that stores the backend config.
 	// This test must override m.dataDir so it loads the "terraform.tfstate" file in the
-	// test directory as the backend config cache
-	m.OverrideDataDir = td
+	// test directory as the backend config cache. This fixture is really a
+	// fixture for the data dir rather than the module dir, so we'll override
+	// them to match just for this test.
+	wd.OverrideDataDir(wd.RootModuleDir())
 
 	stateBackend, diags := m.backendFromState()
 	if diags.HasErrors() {

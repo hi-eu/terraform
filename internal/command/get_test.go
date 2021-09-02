@@ -1,7 +1,6 @@
 package command
 
 import (
-	"os"
 	"strings"
 	"testing"
 
@@ -9,17 +8,15 @@ import (
 )
 
 func TestGet(t *testing.T) {
-	td := tempDir(t)
-	testCopyDir(t, testFixturePath("get"), td)
-	defer os.RemoveAll(td)
-	defer testChdir(t, td)()
+	wd, cleanup := tempWorkingDirFixture(t, "get")
+	defer cleanup()
 
-	ui := new(cli.MockUi)
+	ui := cli.NewMockUi()
 	c := &GetCommand{
 		Meta: Meta{
 			testingOverrides: metaOverridesForProvider(testProvider()),
 			Ui:               ui,
-			dataDir:          tempDir(t),
+			WorkingDir:       wd,
 		},
 	}
 
@@ -35,12 +32,15 @@ func TestGet(t *testing.T) {
 }
 
 func TestGet_multipleArgs(t *testing.T) {
-	ui := new(cli.MockUi)
+	wd, cleanup := tempWorkingDir(t)
+	defer cleanup()
+
+	ui := cli.NewMockUi()
 	c := &GetCommand{
 		Meta: Meta{
 			testingOverrides: metaOverridesForProvider(testProvider()),
 			Ui:               ui,
-			dataDir:          tempDir(t),
+			WorkingDir:       wd,
 		},
 	}
 
@@ -54,17 +54,15 @@ func TestGet_multipleArgs(t *testing.T) {
 }
 
 func TestGet_update(t *testing.T) {
-	td := tempDir(t)
-	testCopyDir(t, testFixturePath("get"), td)
-	defer os.RemoveAll(td)
-	defer testChdir(t, td)()
+	wd, cleanup := tempWorkingDirFixture(t, "get")
+	defer cleanup()
 
-	ui := new(cli.MockUi)
+	ui := cli.NewMockUi()
 	c := &GetCommand{
 		Meta: Meta{
 			testingOverrides: metaOverridesForProvider(testProvider()),
 			Ui:               ui,
-			dataDir:          tempDir(t),
+			WorkingDir:       wd,
 		},
 	}
 

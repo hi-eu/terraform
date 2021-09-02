@@ -24,6 +24,7 @@ import (
 	backendInit "github.com/hashicorp/terraform/internal/backend/init"
 	backendLocal "github.com/hashicorp/terraform/internal/backend/local"
 	"github.com/hashicorp/terraform/internal/command/views"
+	"github.com/hashicorp/terraform/internal/command/workdir"
 	"github.com/hashicorp/terraform/internal/configs"
 	"github.com/hashicorp/terraform/internal/configs/configload"
 	"github.com/hashicorp/terraform/internal/configs/configschema"
@@ -106,6 +107,44 @@ func tempDir(t *testing.T) string {
 	}
 
 	return dir
+}
+
+func tempWorkingDir(t *testing.T) (*workdir.Dir, func() error) {
+	t.Helper()
+
+	dirPath, err := os.MkdirTemp("", "tf-command-test-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	done := func() error {
+		return os.RemoveAll(dirPath)
+	}
+	t.Logf("temporary directory %s", dirPath)
+
+	return workdir.NewDir(dirPath), done
+}
+
+// tempWorkingDirFixture is like tempWorkingDir but it also copies the content
+// from a fixture directory into the temporary directory before returning it.
+func tempWorkingDirFixture(t *testing.T, fixtureName string) (*workdir.Dir, func() error) {
+	t.Helper()
+
+	dirPath, err := os.MkdirTemp("", "tf-command-test-"+fixtureName)
+	if err != nil {
+		t.Fatal(err)
+	}
+	done := func() error {
+		return os.RemoveAll(dirPath)
+	}
+	t.Logf("temporary directory %s with fixture %q", dirPath, fixtureName)
+
+	fixturePath := testFixturePath(fixtureName)
+	testCopyDir(t, fixturePath, dirPath)
+	// NOTE: Unfortunately because testCopyDir immediately aborts the test
+	// on failure, a failure to copy will prevent us from cleaning up the
+	// temporary directory. Oh well. :(
+
+	return workdir.NewDir(dirPath), done
 }
 
 func testFixturePath(name string) string {
@@ -853,8 +892,10 @@ func testLockState(sourceDir, path string) (func(), error) {
 }
 
 // testCopyDir recursively copies a directory tree, attempting to preserve
-// permissions. Source directory must exist, destination directory must *not*
-// exist. Symlinks are ignored and skipped.
+// permissions. Source directory must exist, destination directory may exist
+// but will be created if not; it should typically be a temporary directory,
+// and thus already created using os.MkdirTemp or similar.
+// Symlinks are ignored and skipped.
 func testCopyDir(t *testing.T, src, dst string) {
 	t.Helper()
 
@@ -872,9 +913,6 @@ func testCopyDir(t *testing.T, src, dst string) {
 	_, err = os.Stat(dst)
 	if err != nil && !os.IsNotExist(err) {
 		t.Fatal(err)
-	}
-	if err == nil {
-		t.Fatal("destination already exists")
 	}
 
 	err = os.MkdirAll(dst, si.Mode())
