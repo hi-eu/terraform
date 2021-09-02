@@ -88,6 +88,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.1 // indirect
 	github.com/hashicorp/hcl v0.0.0-20170504190234-a4b07c25de5f
 	github.com/hashicorp/hcl/v2 v2.10.1
+	github.com/hashicorp/hil v0.0.0-20210521165536-27a72121fd40 // indirect
 	github.com/hashicorp/jsonapi v0.0.0-20210518035559-1e50d74c8db3 // indirect
 	github.com/hashicorp/serf v0.9.5 // indirect
 	github.com/hashicorp/terraform-config-inspect v0.0.0-20210209133302-4fd17a0faac2
