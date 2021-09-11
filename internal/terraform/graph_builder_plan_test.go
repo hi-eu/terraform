@@ -26,22 +26,14 @@ func TestPlanGraphBuilder(t *testing.T) {
 		},
 	}
 	openstackProvider := mockProviderWithResourceTypeSchema("openstack_floating_ip", simpleTestSchema())
-	components := &basicComponentFactory{
-		providers: map[addrs.Provider]providers.Factory{
-			addrs.NewDefaultProvider("aws"):       providers.FactoryFixed(awsProvider),
-			addrs.NewDefaultProvider("openstack"): providers.FactoryFixed(openstackProvider),
-		},
-	}
+	plugins := newContextPlugins(map[addrs.Provider]providers.Factory{
+		addrs.NewDefaultProvider("aws"):       providers.FactoryFixed(awsProvider),
+		addrs.NewDefaultProvider("openstack"): providers.FactoryFixed(openstackProvider),
+	}, nil)
 
 	b := &PlanGraphBuilder{
-		Config:     testModule(t, "graph-builder-plan-basic"),
-		Components: components,
-		Schemas: &Schemas{
-			Providers: map[addrs.Provider]*ProviderSchema{
-				addrs.NewDefaultProvider("aws"):       awsProvider.ProviderSchema(),
-				addrs.NewDefaultProvider("openstack"): openstackProvider.ProviderSchema(),
-			},
-		},
+		Config:  testModule(t, "graph-builder-plan-basic"),
+		Plugins: plugins,
 	}
 
 	g, err := b.Build(addrs.RootModuleInstance)
@@ -77,20 +69,13 @@ func TestPlanGraphBuilder_dynamicBlock(t *testing.T) {
 			},
 		},
 	})
-	components := &basicComponentFactory{
-		providers: map[addrs.Provider]providers.Factory{
-			addrs.NewDefaultProvider("test"): providers.FactoryFixed(provider),
-		},
-	}
+	plugins := newContextPlugins(map[addrs.Provider]providers.Factory{
+		addrs.NewDefaultProvider("test"): providers.FactoryFixed(provider),
+	}, nil)
 
 	b := &PlanGraphBuilder{
-		Config:     testModule(t, "graph-builder-plan-dynblock"),
-		Components: components,
-		Schemas: &Schemas{
-			Providers: map[addrs.Provider]*ProviderSchema{
-				addrs.NewDefaultProvider("test"): provider.ProviderSchema(),
-			},
-		},
+		Config:  testModule(t, "graph-builder-plan-dynblock"),
+		Plugins: plugins,
 	}
 
 	g, err := b.Build(addrs.RootModuleInstance)
@@ -142,20 +127,13 @@ func TestPlanGraphBuilder_attrAsBlocks(t *testing.T) {
 			},
 		},
 	})
-	components := &basicComponentFactory{
-		providers: map[addrs.Provider]providers.Factory{
-			addrs.NewDefaultProvider("test"): providers.FactoryFixed(provider),
-		},
-	}
+	plugins := newContextPlugins(map[addrs.Provider]providers.Factory{
+		addrs.NewDefaultProvider("test"): providers.FactoryFixed(provider),
+	}, nil)
 
 	b := &PlanGraphBuilder{
-		Config:     testModule(t, "graph-builder-plan-attr-as-blocks"),
-		Components: components,
-		Schemas: &Schemas{
-			Providers: map[addrs.Provider]*ProviderSchema{
-				addrs.NewDefaultProvider("test"): provider.ProviderSchema(),
-			},
-		},
+		Config:  testModule(t, "graph-builder-plan-attr-as-blocks"),
+		Plugins: plugins,
 	}
 
 	g, err := b.Build(addrs.RootModuleInstance)
@@ -194,9 +172,8 @@ test_thing.b (expand)
 
 func TestPlanGraphBuilder_targetModule(t *testing.T) {
 	b := &PlanGraphBuilder{
-		Config:     testModule(t, "graph-builder-plan-target-module-provider"),
-		Components: simpleMockComponentFactory(),
-		Schemas:    simpleTestSchemas(),
+		Config:  testModule(t, "graph-builder-plan-target-module-provider"),
+		Plugins: simpleMockPluginLibrary(),
 		Targets: []addrs.Targetable{
 			addrs.RootModuleInstance.Child("child2", addrs.NoKey),
 		},
@@ -216,20 +193,13 @@ func TestPlanGraphBuilder_targetModule(t *testing.T) {
 func TestPlanGraphBuilder_forEach(t *testing.T) {
 	awsProvider := mockProviderWithResourceTypeSchema("aws_instance", simpleTestSchema())
 
-	components := &basicComponentFactory{
-		providers: map[addrs.Provider]providers.Factory{
-			addrs.NewDefaultProvider("aws"): providers.FactoryFixed(awsProvider),
-		},
-	}
+	plugins := newContextPlugins(map[addrs.Provider]providers.Factory{
+		addrs.NewDefaultProvider("aws"): providers.FactoryFixed(awsProvider),
+	}, nil)
 
 	b := &PlanGraphBuilder{
-		Config:     testModule(t, "plan-for-each"),
-		Components: components,
-		Schemas: &Schemas{
-			Providers: map[addrs.Provider]*ProviderSchema{
-				addrs.NewDefaultProvider("aws"): awsProvider.ProviderSchema(),
-			},
-		},
+		Config:  testModule(t, "plan-for-each"),
+		Plugins: plugins,
 	}
 
 	g, err := b.Build(addrs.RootModuleInstance)

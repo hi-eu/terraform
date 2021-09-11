@@ -34,7 +34,6 @@ type ContextGraphWalker struct {
 	Operation          walkOperation
 	StopContext        context.Context
 	RootVariableValues InputValues
-	Schemas            *Schemas
 	Config             *configs.Config
 
 	// This is an output. Do not set this, nor read it while a graph walk
@@ -81,7 +80,7 @@ func (w *ContextGraphWalker) EvalContext() EvalContext {
 		Operation:          w.Operation,
 		State:              w.State,
 		Changes:            w.Changes,
-		Schemas:            w.Schemas,
+		Plugins:            w.Context.plugins,
 		VariableValues:     w.variableValues,
 		VariableValuesLock: &w.variableValuesLock,
 	}
@@ -91,8 +90,7 @@ func (w *ContextGraphWalker) EvalContext() EvalContext {
 		Hooks:                 w.Context.hooks,
 		InputValue:            w.Context.uiInput,
 		InstanceExpanderValue: w.InstanceExpander,
-		Components:            w.Context.components,
-		Schemas:               w.Schemas,
+		Plugins:               w.Context.plugins,
 		MoveResultsValue:      w.MoveResults,
 		ProviderCache:         w.providerCache,
 		ProviderInputConfig:   w.Context.providerInputConfig,
